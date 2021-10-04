@@ -1,39 +1,34 @@
-//pull deal record, deal.contact id, a list of all contacts, and a list of all surveys
-//5007702000000882081
-dealRecord = zoho.crm.getRecordById("Deals",id);
-dealContactID = dealRecord.get("Contact_Name").get("id");
-//keep for reference: surveyRelatedRecord = zoho.crm.getRelatedRecords("Deal1","Deals",id);
-customerRecords = zoho.crm.getRecords("Contacts");
-allSurveyRecords = zoho.crm.getRecords("Surveys");
-info "Customer record:****************************" + customerRecords;
-//keep for reference: customerRecord = zoho.books.getRecords("Contacts",orgID,searchParam,"zohobooks").get("contacts");
-//set public variables for the emails and ids looking for in the lists
-contactEmail = null;
+//pull contact record from deal by searching through the contacts for a matching
+//contact email to the survey email, t
+//    5007702000000888001
+surveyRecord = zoho.crm.getRecordById("Surveys",surveyID);
+surveyEmail = surveyRecord.get("Email");
+searchEmail = zoho.crm.searchRecords("Contacts","Email:equals:" + surveyEmail);
+searchDeals = zoho.crm.getRecords("Deals");
+searchContacts = zoho.crm.getRecords("Contacts");
 contactID = null;
-surveyRecordEmail = null;
-surveyRecordID = null;
-/*searching each customer record for a matching id from related deal record. once the matching id is found, set the contact
-email and id to this particular record*/
-for each  record in customerRecords
+dealContactID = null;
+dealID = null;
+for each  record in searchContacts
 {
-	if(record.get("id") = dealContactID)
+	if(record.get("Email") = surveyEmail)
 	{
-		contactID = dealContactID;
-		contactEmail = record.get("Email");
+		contactID = record.get("id");
 	}
 }
-//searching each survey for a matching email from the deal's contact. once found, set the survey record id
-for each  record in allSurveyRecords
+info "Contact ID******************************" + contactID;
+associatedDeals = zoho.crm.getRelatedRecords("Deals","Contacts",contactID);
+for each  deal in associatedDeals
 {
-	if(record.get("Email") = contactEmail)
+	dealContactID = deal.get("Contact_Name").get("id");
+	if(dealContactID = contactID)
 	{
-		surveyRecordID = record.get("id");
+		dealID = deal.get("id");
 	}
 }
-info "Contact ID: *********************" + contactID;
-info "Contact email: *******************" + contactEmail;
-info "Deal record*******************************" + dealRecord;
-//map the survey to the correct deal id, then update the field
-surveyUpdate = Map();
-surveyUpdate.put("Deal",id);
-update = zoho.crm.updateRecord("Surveys",surveyRecordID,surveyUpdate);
+info "Deal records***************************" + searchDeals;
+info "associated deals***********************" + associatedDeals;
+updateSurveyMap = Map();
+updateSurveyMap.put("Deal",dealID);
+updateSurveyMap.put("Contact",contactID);
+update = zoho.crm.updateRecord("Surveys",surveyID,updateSurveyMap);
