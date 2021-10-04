@@ -1,0 +1,39 @@
+//pull deal record, deal.contact id, a list of all contacts, and a list of all surveys
+//5007702000000882081
+dealRecord = zoho.crm.getRecordById("Deals",id);
+dealContactID = dealRecord.get("Contact_Name").get("id");
+//keep for reference: surveyRelatedRecord = zoho.crm.getRelatedRecords("Deal1","Deals",id);
+customerRecords = zoho.crm.getRecords("Contacts");
+allSurveyRecords = zoho.crm.getRecords("Surveys");
+info "Customer record:****************************" + customerRecords;
+//keep for reference: customerRecord = zoho.books.getRecords("Contacts",orgID,searchParam,"zohobooks").get("contacts");
+//set public variables for the emails and ids looking for in the lists
+contactEmail = null;
+contactID = null;
+surveyRecordEmail = null;
+surveyRecordID = null;
+/*searching each customer record for a matching id from related deal record. once the matching id is found, set the contact
+email and id to this particular record*/
+for each  record in customerRecords
+{
+	if(record.get("id") = dealContactID)
+	{
+		contactID = dealContactID;
+		contactEmail = record.get("Email");
+	}
+}
+//searching each survey for a matching email from the deal's contact. once found, set the survey record id
+for each  record in allSurveyRecords
+{
+	if(record.get("Email") = contactEmail)
+	{
+		surveyRecordID = record.get("id");
+	}
+}
+info "Contact ID: *********************" + contactID;
+info "Contact email: *******************" + contactEmail;
+info "Deal record*******************************" + dealRecord;
+//map the survey to the correct deal id, then update the field
+surveyUpdate = Map();
+surveyUpdate.put("Deal",id);
+update = zoho.crm.updateRecord("Surveys",surveyRecordID,surveyUpdate);
